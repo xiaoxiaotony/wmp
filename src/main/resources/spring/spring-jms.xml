@@ -1,0 +1,31 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://activemq.org/config/1.0 http://activemq.apache.org/schema/core/activemq-core-5.7.0.xsd">
+
+	<!-- 加载数据源配置文件 -->
+	<context:property-placeholder location="classpath:properties/jms.properties" />
+
+	<!-- JMS TOPIC MODEL -->
+	<!-- TOPIC链接工厂 -->
+	<!-- 消息发布者 -->
+	<bean id="topicSendConnectionFactory" class="org.apache.activemq.spring.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="${jms.brokerURL}" />
+		<property name="useAsyncSend" value="${jms.AsyncSend}" /> <!-- 发送异步数据  -->
+		<property name="userName" value="${jms.userName}" />
+		<property name="password" value="${jms.password}" />
+	</bean>
+	
+	<!-- 创建连接 -->
+	<bean id="jmsTemplateProducer" class="com.txy.common.jms.JmsTemplateProducer">
+		<property name="connectionFactory" ref="topicSendConnectionFactory" />
+	</bean>
+    
+</beans>

@@ -1,0 +1,90 @@
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+	http://www.springframework.org/schema/mvc 
+	http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd"
+	default-autowire="byName">
+    
+    <!-- 加载数据源配置文件 -->
+	<context:property-placeholder location="classpath:properties/jdbc.properties" ignore-unresolvable="true" />
+	<!-- 加载邮件配置 -->
+	<context:property-placeholder location="classpath:properties/email.properties" ignore-unresolvable="true" />
+	
+	<bean id="sdiDataSource" class="com.alibaba.druid.pool.DruidDataSource" p:username="${jdbc.username}" p:password="${jdbc.password}" p:url="${jdbc.url}" >
+		<property name="initialSize" value="${initialSize}" />
+		<property name="minIdle" value="${minIdle}" />
+		<property name="maxActive" value="${maxActive}" />
+		<property name="maxWait" value="${maxWait}" />
+		<property name="timeBetweenEvictionRunsMillis" value="${timeBetweenEvictionRunsMillis}" />
+		<property name="minEvictableIdleTimeMillis" value="${minEvictableIdleTimeMillis}" />
+		<property name="validationQuery" value="${validationQuery}" />
+		<property name="testWhileIdle" value="${testWhileIdle}" />
+		<property name="testOnBorrow" value="${testOnBorrow}" />
+		<property name="testOnReturn" value="${testOnReturn}" />
+		<property name="poolPreparedStatements" value="${poolPreparedStatements}" />
+		<property name="resetStatEnable" value="true"/>
+		<property name="maxPoolPreparedStatementPerConnectionSize"
+			value="${maxPoolPreparedStatementPerConnectionSize}" />
+		<property name="filters" value="${filters}" />
+		<property name="connectionProperties" value="druid.stat.mergeSql=false"/>
+	</bean>
+	
+	<!-- 加载spring　simpleJdbcTemplate配置  -->
+	<bean id="simpleJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="sdiDataSource" />
+	</bean>
+	
+	<!-- 配置事物统一由spring管理 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="sdiDataSource" />
+	</bean>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="del*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="login*" propagation="REQUIRED" />
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="register*" propagation="REQUIRED" />
+			<tx:method name="applyService*" propagation="REQUIRED" />
+			<tx:method name="auditOper*" propagation="REQUIRED" />
+			<tx:method name="*" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:advisor pointcut="execution(* com.txy.*.service..*.*(..))"
+			advice-ref="txAdvice" />
+	</aop:config>
+	
+	
+	<bean id="dbPage" class="com.txy.common.impl.OracleDBPageImpl" />
+	
+	<bean id="velocityEngine" class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+	      <property name="velocityProperties">
+	         <value>
+	          resource.loader=class
+	          class.resource.loader.class=org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
+	          </value>
+	      </property>
+   	</bean>  
+	<context:component-scan base-package="com.txy.common.base" />
+	<context:component-scan base-package="com.txy.common.orm" />
+	
+    
+    <!-- 引入cache配置文件 -->
+	<import resource="spring-cache.xml"/>
+    
+    <!-- 引入mq配置 -->
+    <!--<import resource="spring-jms.xml"/> -->
+    
+    <import resource="web/spring-web.xml"/>
+</beans>
